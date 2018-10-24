@@ -64,8 +64,8 @@ namespace cactus
 	Event (const Event &){;}
 	Event & operator = (const Event &){ return *this; }
     private:
-	virtual std::map < size_t, size_t >_getifds () const { return std::map < size_t, size_t >(); }
-	virtual std::map < size_t, size_t >_getofds () const { return std::map < size_t, size_t >(); }
+	virtual std::map < int, size_t >_getifds () const { return std::map < int, size_t >(); }
+	virtual std::map < int, size_t >_getofds () const { return std::map < int, size_t >(); }
 	virtual void _execute ( const EventSon &){;}
     private:
 	pthread_mutex_t mutex_;
