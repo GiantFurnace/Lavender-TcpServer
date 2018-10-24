@@ -64,8 +64,8 @@ namespace lavender
     nana_->die();\
     exit(EXIT_FAILURE);
 
-    #define _LOG_OUTPUT(LEVEL, FORMAT, MESSAGE);\
-    nana_->say(LEVEL, __func__, __LINE__, FORMAT, MESSAGE)
+    #define _LOG_OUTPUT(LEVEL, FORMAT, MESSAGE, ...);\
+    nana_->say(LEVEL, __func__, __LINE__, FORMAT, MESSAGE, ##__VA_ARGS__)
 
     TcpServer::TcpServer(const std::string & address ) throw():
     address_(address), sockfd_(-1), processors_(1), nana_(0), threadIdx_(0)
@@ -174,7 +174,7 @@ namespace lavender
         _LOG_OUTPUT(DEBUG, "Register a tcp server on %s", address_.c_str());
         _register();
         acceptIO_.set(sockfd_, types::events::READ, this, &lavender::TcpServer::_accept);
-        _LOG_OUTPUT(DEBUG, "%s", "Lavender tcp server is running...");
+        _LOG_OUTPUT(DEBUG, "Lavender tcp server <tid:%lu> is running...", pthread_self());
         acceptIO_.join(mainEventPool_);
         mainEventPool_.run();
     }
@@ -182,13 +182,21 @@ namespace lavender
     void TcpServer::_asyncRead(const cactus::EventSon & son)
     {
        int fd;
-       utils::net::readBuffer(son.fd, &fd, sizeof(fd));
-       _LOG_OUTPUT(DEBUG, "Receive the socket descroptor:%d from main event loop", fd);
+       ssize_t bytes = utils::net::readBuffer(son.fd, &fd, sizeof(fd));
+       if (bytes <= 0)
+       {
+           son.pool->kill(son);   
+       }
+       else
+       {
+           _LOG_OUTPUT(DEBUG, "Thread <tid:%lu> receive socket descriptor <fd:%d> from main event loop", pthread_self(), fd);
+       }
     }
 
     void * TcpServer::_worker(void *arg) throw()
     {
         TcpServer * server = (TcpServer *)arg;
+        server->nana_->say(Nana::HAPPY, __func__, __LINE__, "Thread <tid:%lu> is running...", pthread_self());
         std::vector<Thread>::iterator iter = (server->threads_).begin();
         while (iter != (server->threads_).end())
         {
