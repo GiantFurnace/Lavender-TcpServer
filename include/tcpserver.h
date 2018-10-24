@@ -1,0 +1,96 @@
+/*
+ * lavender tcp server native API header
+ *
+ * Copyright (c) 2018-2028 chenzhengqiang 642346572@qq.com
+ * All rights reserved since 2018-10-22
+ *
+ * Redistribution and use in source and binary forms, with or without modifica-
+ * tion, are permitted provided that the following conditions are met:
+ *
+ *   1.  Redistributions of source code must retain the above copyright notice,
+ *       this list of conditions and the following disclaimer.
+ *
+ *   2.  Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MER-
+ * CHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+ * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPE-
+ * CIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTH-
+ * ERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * the GNU General Public License ("GPL") version 2 or any later version,
+ * in which case the provisions of the GPL are applicable instead of
+ * the above. If you wish to allow the use of your version of this file
+ * only under the terms of the GPL and not to allow others to use your
+ * version of this file under the BSD license, indicate your decision
+ * by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL. If you do not delete the
+ * provisions above, a recipient may use your version of this file under
+ * either the BSD or the GPL.
+ */
+
+#ifndef _BACKER_LAVENDER_TCPSERVER
+#define _BACKER_LAVENDER_TCPSERVER
+
+#include "nana.h"
+#include "event.h"
+#include "io.h"
+#include "async.h"
+#include "timer.h"
+#include "eventspool.h"
+#include <string>
+#include <vector>
+#include <map>
+#include <pthread.h>
+
+namespace lavender
+{
+    class TcpServer
+    {
+    public:
+        TcpServer(const std::string & address) throw();
+        void serveForever() throw();
+        void operator () (const cactus::EventSon &);
+        std::string ip() const throw() { return ip_; }
+        std::size_t port() const throw() { return port_; }
+
+    private:
+        TcpServer() {;}
+        TcpServer(const TcpServer &) {;}
+        TcpServer & operator=(const TcpServer &) { return *this; }
+        
+        void _register() throw();
+        void _initThreadPool() throw();
+        static void * _worker(void * arg) throw();
+
+        void _accept(const cactus::EventSon & son);
+        void _asyncRead(const cactus::EventSon & son);
+
+    private:
+        std::string address_;
+        std::string ip_;
+        uint16_t port_;
+        int sockfd_;
+        long int processors_;
+        logging::Nana * nana_;
+        cactus::IO<TcpServer> acceptIO_;
+        cactus::EventsPool mainEventPool_;
+
+        struct Thread
+        {
+            pthread_t tid;
+            cactus::Async<TcpServer> * async;
+        };
+        std::vector<Thread> threads_;
+        std::size_t threadIdx_;
+    };
+}
+#endif
