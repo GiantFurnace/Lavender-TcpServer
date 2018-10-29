@@ -73,6 +73,8 @@ namespace lavender
 
         void _accept(const cactus::EventSon & son);
         void _asyncRead(const cactus::EventSon & son);
+        void _onClientRead(const cactus::EventSon & son);
+        void _onClientWrite(const cactus::EventSon & son);
 
     private:
         std::string address_;
@@ -90,6 +92,7 @@ namespace lavender
             cactus::Async<TcpServer> * async;
         };
         std::vector<Thread> threads_;
+        std::map<pthread_t, std::map<int, cactus::IO<TcpServer>* > > clients_;
         std::size_t threadIdx_;
     };
 }
