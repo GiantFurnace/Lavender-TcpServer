@@ -32,7 +32,7 @@
  * only under the terms of the GPL and not to allow others to use your
  * versIOn of this file under the BSD license, indicate your decisIOn
  * by deleting the provisIOns above and replace them with the notice
- * and other provisIOns required by the GPL. If you do not delete the
+ * and other provisions required by the GPL. If you do not delete the
  * provisIOns above, a recipient may use your versIOn of this file under
  * either the BSD or the GPL.
  */
